@@ -78,6 +78,12 @@ def main():
     init_dist(args.launcher, **cfg.dist_params)
     rank, world_size = get_dist_info()
     cfg.gpu_ids = range(world_size)
+    
+    # Defining Which GPU to use
+    print("gpus : ",cfg.gpu_ids)
+    cfg.gpu_ids = range(1,2)
+    print("gpus : ",cfg.gpu_ids)
+    
 
     auto_resume = cfg.get('auto_resume', True)
     if auto_resume and cfg.get('resume_from', None) is None:

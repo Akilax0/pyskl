@@ -38,6 +38,7 @@ for i in range(len(annotations)):
     # if int(annotations[i]['label']) == 1:
     #     print(annotations[i]['frame_dir'])
     if int(annotations[i]['label']) in class_list:
+        annotations[i]['label'] = annotations[i]['label'] - 50
         two_person_annotations.append(annotations[i])
         # print(annotations[i].keys())
         
@@ -90,5 +91,5 @@ new_file = dict(split=two_person_split, annotations=two_person_annotations)
 
 print(new_file.keys())
 
-# with open('ntu60_two.pkl', 'wb') as file:
-#     pickle.dump(new_file, file)
+with open('ntu60_two.pkl', 'wb') as file:
+    pickle.dump(new_file, file)

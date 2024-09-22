@@ -5,6 +5,7 @@ from torch import nn
 from ..builder import RECOGNIZERS
 from .base import BaseRecognizer
 
+import matplotlib.image
 
 @RECOGNIZERS.register_module()
 class Recognizer3D(BaseRecognizer):
@@ -18,11 +19,24 @@ class Recognizer3D(BaseRecognizer):
         losses = dict()
 
         x = self.extract_feat(imgs)
+      
+        # Visualizing Features 
+        # print("SIZES")
+        # print("Input Images: ",imgs.size())
+        # print("Outputs size: ",x.size()) 
+        out_img = imgs
+        out_img = out_img.cpu()
+        
+        # matplotlib.image.imsave("image.png",out_img[0])
+        # matplotlib.image.imsave("feat.png",out_feat[0][0][0])
 
         cls_score = self.cls_head(x)
         gt_label = label.squeeze()
         loss_cls = self.cls_head.loss(cls_score, gt_label, **kwargs)
         losses.update(loss_cls)
+
+        # print("CLS_SCORE: ",cls_score,gt_label)
+        # print("Losses: ",losses)
 
         return losses
 

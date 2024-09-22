@@ -2,6 +2,7 @@ model = dict(
     type='Recognizer3D',
     backbone=dict(
         type='ResNet3dSlowOnly',
+        # depth=50,
         in_channels=17,
         base_channels=32,
         num_stages=3,
@@ -62,7 +63,7 @@ test_pipeline = [
 ]
 data = dict(
     # videos_per_gpu=32,
-    videos_per_gpu=32,
+    videos_per_gpu=4,
     workers_per_gpu=4,
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(
@@ -82,4 +83,4 @@ checkpoint_config = dict(interval=1)
 evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5))
 log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook'),dict(type='TensorboardLoggerHook')])
 log_level = 'INFO'
-work_dir = './work_dirs/posec3d/slowonly_r50_ntu60_xsub/joint_two'
+work_dir = './work_dirs/posec3d/slowonly_r50_ntu60_xsub/joint_two_exp'

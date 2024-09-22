@@ -40,6 +40,7 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
                  test_cfg=dict()):
         super().__init__()
         # record the source of the backbone
+        # print("Backbone:",backbone)
         self.backbone = builder.build_backbone(backbone)
         self.cls_head = builder.build_head(cls_head) if cls_head else None
 

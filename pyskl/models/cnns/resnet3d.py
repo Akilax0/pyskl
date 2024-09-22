@@ -293,6 +293,7 @@ class ResNet3d(nn.Module):
 
         self.block, stage_blocks = self.arch_settings[depth]
 
+
         if self.stage_blocks is None:
             self.stage_blocks = stage_blocks[:num_stages]
 
@@ -325,6 +326,11 @@ class ResNet3d(nn.Module):
             self.res_layers.append(layer_name)
 
         self.feat_dim = self.block.expansion * self.base_channels * 2 ** (len(self.stage_blocks) - 1)
+        
+        # Debugging
+        print("=============================================================")
+        print("Inside resnet base: ", self.conv1_kernel,self.stage_inflations,self.block,self.stage_blocks,self.depth)
+        print("=============================================================")
 
     @staticmethod
     def make_res_layer(block,
@@ -604,6 +610,8 @@ class ResNet3d(nn.Module):
             torch.Tensor: The feature of the input
             samples extracted by the backbone.
         """
+        
+        
         x = self.conv1(x)
         x = self.maxpool(x)
         outs = []
@@ -612,8 +620,15 @@ class ResNet3d(nn.Module):
             x = res_layer(x)
             if i in self.out_indices:
                 outs.append(x)
+
+        # Feature extraction visualization
+        # print("RESNET")
+        # print("Input Image: ",x.size())
+        # print("Output: ",len(outs))
+
         if len(outs) == 1:
             return outs[0]
+
 
         return tuple(outs)
 

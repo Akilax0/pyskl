@@ -40,8 +40,12 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
                  test_cfg=dict()):
         super().__init__()
         # record the source of the backbone
-        # print("Backbone:",backbone)
-        self.backbone = builder.build_backbone(backbone)
+        print("Backbone:",backbone)
+        self.backbone = builder.build_backbone(backbone["resnet_cfg"])
+
+        print("resnet built")
+        self.vit = builder.build_backbone(backbone["vit"]) 
+        
         self.cls_head = builder.build_head(cls_head) if cls_head else None
 
         if train_cfg is None:

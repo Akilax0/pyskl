@@ -8,7 +8,6 @@ HEADS = MODELS
 RECOGNIZERS = MODELS
 LOSSES = MODELS
 
-
 def build_backbone(cfg):
     """Build backbone."""
     return BACKBONES.build(cfg)

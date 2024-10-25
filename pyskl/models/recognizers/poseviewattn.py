@@ -5,32 +5,42 @@ from torch import nn
 from ..builder import RECOGNIZERS
 from .base import BaseRecognizer
 
-import matplotlib.image
+# importing transformer
+# from mmcls.models.backbones import VisionTransformer
+
+import matplotlib
+
+import torchvision.transforms as transforms
+from PIL import Image
 
 @RECOGNIZERS.register_module()
 class PoseViewAttention(BaseRecognizer):
-    """3D recognizer model framework with attention"""
-
+    """3D recognizer model framework."""
+    
     def forward_train(self, imgs, label, **kwargs):
         """Defines the computation performed at every call when training."""
 
         assert self.with_cls_head
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
         losses = dict()
+        
+        # print("Heatmaps: ",imgs.shape)
+        # x = ViT(imgs)
 
         x = self.extract_feat(imgs)
-      
+
+
         # Visualizing Features 
         # print("SIZES")
         # print("Input Images: ",imgs.size())
         # print("Outputs size: ",x.size()) 
-        out_img = imgs
-        out_img = out_img.cpu()
         
-        # matplotlib.image.imsave("image.png",out_img[0])
+        # matplotlib.image.imsave("input_image.png",imgs[0].cpu())
         # matplotlib.image.imsave("feat.png",out_feat[0][0][0])
 
         cls_score = self.cls_head(x)
+        # print("CLS score size: ",cls_score.size()) 
+
         gt_label = label.squeeze()
         loss_cls = self.cls_head.loss(cls_score, gt_label, **kwargs)
         losses.update(loss_cls)

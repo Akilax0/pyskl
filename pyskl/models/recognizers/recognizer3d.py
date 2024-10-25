@@ -5,9 +5,6 @@ from torch import nn
 from ..builder import RECOGNIZERS
 from .base import BaseRecognizer
 
-import matplotlib
-
-import torchvision.transforms as transforms
 from PIL import Image
 
 @RECOGNIZERS.register_module()

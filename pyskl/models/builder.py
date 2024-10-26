@@ -10,6 +10,7 @@ LOSSES = MODELS
 
 def build_backbone(cfg):
     """Build backbone."""
+    # print("backbone: ",cfg)
     return BACKBONES.build(cfg)
 
 
@@ -33,5 +34,6 @@ def build_model(cfg):
     args = cfg.copy()
     obj_type = args.pop('type')
     if obj_type in RECOGNIZERS:
+        # print("obj type:", obj_type )
         return build_recognizer(cfg)
     raise ValueError(f'{obj_type} is not registered')

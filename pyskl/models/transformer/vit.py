@@ -2,6 +2,7 @@ import torch
 from torch import nn
 # from data_loader import *
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 from ..builder import BACKBONES
 
@@ -12,138 +13,34 @@ from ..builder import BACKBONES
 # EMBEDDING_DIMS = IMAGE_CHANNELS * PATCH_SIZE**2
 # NUM_OF_PATCHES = int((IMAGE_WIDTH*IMAGE_HEIGHT)/PATCH_SIZE**2)
 
-
-# Takes image and throws patch embeddings : image embedding + class token + position embedding
-class PatchEmbeddingLayer(nn.Module):
-    def __init__(self, in_channels, patch_size, embedding_dim,num_of_patches):
+class PositionalEncoding(nn.Module):
+    def __init__(self,embedding_dim,num_joints):
         super().__init__()
-        self.patch_size = patch_size
-        self.embedding_dim = embedding_dim
-        self.in_channels = in_channels
-        self.conv_layer = nn.Conv2d(in_channels=in_channels, out_channels=embedding_dim, \
-            kernel_size=patch_size, stride=patch_size)
-        self.flatten_layer = nn.Flatten(start_dim = 1, end_dim=2)
-        self.class_token_embeddings = nn.Parameter(torch.rand((1, 1, embedding_dim), requires_grad = True))
-        self.position_embeddings = nn.Parameter(torch.rand((1,num_of_patches + 1, embedding_dim), requires_grad=True))
+        # pe = torch.zeros(num_joints,embedding_dim)
+        # print("pe: ",pe.shape)
+        # joint_positions = torch.arange(0, num_joints, dtype=torch.float).unsqueeze(1)
+        # print("joint positions : ",joint_positions.shape)
         
-        
-    def forward(self,x):
-        
-        
-        # print("x: ",x.shape)
-        conv =  self.conv_layer(x).permute((0,2,3,1))
-        # print("conv: ",conv.shape)
-        flat =  self.flatten_layer(conv)
-        # print("flat: ",flat.shape)
-        
-        batch_size, _, _ = flat.size()
-        # Expand the [CLS] token to the batch size
-        # (1, 1, hidden_size) -> (batch_size, 1, hidden_size)
-        cls_tokens = self.class_token_embeddings.expand(batch_size, -1, -1)
-        
-        cat = torch.cat((cls_tokens,flat),dim=1)
-        # print("cat: ",cat.shape)
-        output = cat + self.position_embeddings
-        
-        # output = torch.cat((self.class_token_embeddings, self.flatten_layer(self.conv_layer(x).permute((0,2,3,1)))), dim=1) \
-        #     + self.position_embeddings
-            
-        return output
-        
-# Multi-Head Self Attnetion Block 
-# Layer Norm : normalize patch embeddings across embedding dimension
-# Multi Head: Q,K,V 
-# input and output size same for the MSA block - [batch_size, sequence_length, embedding_dimensions]
+        # div_term = torch.exp(torch.arange(0, embedding_dim, 2).float() * (-torch.log(torch.tensor(10000.0)) / embedding_dim))
+        # pe[:, 0::2] = torch.sin(joint_positions * div_term)
+        # pe[:, 1::2] = torch.cos(joint_positions * div_term)
+        # pe = pe.unsqueeze(0).transpose(0, 1)
+        # self.register_buffer('pe', pe)
 
+        self.position_embeddings = nn.Parameter(torch.rand((1,num_joints, embedding_dim), requires_grad=True))
 
-# MSA block defined acccording to the parameters in the ViT paper
-# ViT-Base is implemented here
-
-class MultiHeadSelfAttentionBlock(nn.Module):
-    def __init__(self, 
-                 embedding_dims = 768, # Hidden size D in ViT
-                 num_heads = 12, # Heads in the paper
-                 attn_dropout = 0.0 # Defaults to zero as no there is no dropout for the block
-    ):
-        super().__init__()
-        
-        self.embedding_dims = embedding_dims
-        self.num_head = num_heads
-        self.attn_dropout = attn_dropout
-        
-        self.layernorm = nn.LayerNorm(normalized_shape = embedding_dims)
-        self.multiheadattention = nn.MultiheadAttention(num_heads = num_heads,
-                                                        embed_dim = embedding_dims,
-                                                        dropout = attn_dropout,
-                                                        batch_first = True,)
-        
-        
-    def forward(self,x):
-        x = self.layernorm(x)
-        output,_ = self.multiheadattention(query=x, key=x, value=x, need_weights=False)
-        
-        return output
-    
-    
-# MLP Block Code
-class MachineLearningPerceptronBlock(nn.Module):
-    def __init__ (self, embedding_dims, mlp_size, mlp_dropout):
-        super().__init__()
-        self.embedding_dims = embedding_dims
-        self.mlp_size = mlp_size
-        self.dropout = mlp_dropout
-        
-        self.layernorm = nn.LayerNorm(normalized_shape = embedding_dims)
-        self.mlp = nn.Sequential(
-            nn.Linear(in_features=embedding_dims, out_features = mlp_size),
-            nn.GELU(),
-            nn.Dropout(p=mlp_dropout),
-            nn.Linear(in_features = mlp_size, out_features = embedding_dims),
-            nn.Dropout(p=mlp_dropout)
-        )
-        
     def forward(self, x):
-        return self.mlp(self.layernorm(x))
+        # print("pe size: ",self.position_embeddings.shape)
+        return x + self.position_embeddings
         
-class TransformerBlock(nn.Module):
-    def __init__(self, embedding_dims = 48,
-                 mlp_dropout = 0.1,
-                 attn_dropout = 0.0,
-                 mlp_size = 3072,
-                 num_heads = 4,
-                 ):
-        super().__init__()
-        
-        self.msa_block = MultiHeadSelfAttentionBlock(embedding_dims= embedding_dims,
-                                                     num_heads=num_heads,
-                                                     attn_dropout=attn_dropout)
-        self.mlp_block = MachineLearningPerceptronBlock(embedding_dims=embedding_dims,
-                                                        mlp_size=mlp_size,
-                                                        mlp_dropout=mlp_dropout)
-        
-    def forward(self,x):
-        x = self.msa_block(x) + x 
-        x = self.mlp_block(x) + x
-        return x
-    
-# @BACKBONES.register_module()
-# class TransformerResNetBackbone():
-#     def __init__(self, vit_cfg):
-#         super(TransformerResNetBackbone, self).__init__()
-#         self.vit = VisionTransformer(**vit_cfg)
-
-#     def forward(self, x):
-#         # x is the raw input frames
-#         vit_features = self.vit(x)  # Process input with Vision Transformer
-#         return vit_features
-
-
 @BACKBONES.register_module()
 class VisionTransformer(nn.Module):
     def __init__(self,
         image_size = 56, 
         patch_size = 16, 
-        embedding_dim = 768,
+        embedding_dim = 256,
+        heatmap_size = (48,56,56),
+        num_joints = 17,
         num_heads = 4,
         num_transformer_layers = 4, 
         mlp_dropout = 0.0,
@@ -153,27 +50,66 @@ class VisionTransformer(nn.Module):
         in_channels = 3,
         **kwargs
 ):
-        print("AT INIT")
-        super().__init__(image_size = image_size,patch_size = patch_size, embedding_dim = embedding_dim, num_heads = num_heads, num_transformer_layers = num_transformer_layers, 
-        mlp_dropout = mlp_dropout, attn_dropout = attn_dropout, mlp_size = mlp_size, num_classes = num_classes,
-        in_channels = in_channels, **kwargs)
+        # print("AT INIT")
+        # super().__init__(image_size = image_size,patch_size = patch_size, embedding_dim = embedding_dim, num_heads = num_heads, num_transformer_layers = num_transformer_layers, 
+        # mlp_dropout = mlp_dropout, attn_dropout = attn_dropout, mlp_size = mlp_size, num_classes = num_classes,
+        # in_channels = in_channels, **kwargs)
+        super().__init__() 
         
-        self.num_of_patches = int((image_size ** 2) / patch_size **2)
 
+        self.heatmap_size = heatmap_size
+        self.embedding_dim = embedding_dim
+        self.num_joins = num_joints
         
-        self.patch_embedding_layer = PatchEmbeddingLayer(in_channels=in_channels,
-                                                         patch_size = patch_size,
-                                                         embedding_dim= embedding_dim,
-                                                         num_of_patches=self.num_of_patches)
-        self.transformer_encoder = nn.Sequential(*[TransformerBlock(embedding_dims=embedding_dim,
-                                                                    mlp_dropout=mlp_dropout,
-                                                                    attn_dropout=attn_dropout,
-                                                                    mlp_size=mlp_size,
-                                                                    num_heads=num_heads)
-                                                   for _ in range(num_transformer_layers)])
-        self.classifier = nn.Sequential(nn.LayerNorm(normalized_shape=embedding_dim),
-                                        nn.Linear(in_features = embedding_dim,
-                                                  out_features = num_classes))
+        self.flatten_size = heatmap_size[0]*heatmap_size[1]*heatmap_size[2]
+        self.embedding = nn.Linear(self.flatten_size, embedding_dim)
+
+        # positional encondings
+        self.positional_encoding = PositionalEncoding(embedding_dim, num_joints)
         
+        encoder_layer = nn.TransformerEncoderLayer(d_model=embedding_dim, nhead=num_heads, activation="gelu",batch_first=True)
+         
+        layernorm = nn.LayerNorm(normalized_shape = embedding_dim)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_transformer_layers, norm=layernorm)
+
+        # Mapping attention to a single score
+        self.attention_fc = nn.Linear(embedding_dim, 1)
+
     def forward(self,x):
-        return self.classifier(self.transformer_encoder(self.patch_embedding_layer(x))[:,0])
+        
+        batch_size, num_joints, temporal_dim, height, width = x.shape
+        
+        original_heatmaps = x
+
+        # print("x input: ",x.shape)
+        # Flatten each heatmap at 48*58*56 
+        x = x.view(batch_size, num_joints, -1)
+        # print("x flatten: ",x.shape)
+        x = self.embedding(x)
+        # print("x embedding: ",x.shape)
+        x = self.positional_encoding(x)
+        # print("x after pos embed: ",x.shape)
+
+        x = self.transformer_encoder(x)
+        # print("x encoder output: ",x.shape)
+        
+        x = self.attention_fc(x)
+        # print("x attention vals: ",x.shape)
+        
+
+        joint_attention_scores = x.squeeze(-1)  # (batch_size, num_joints)
+        # print("joint attention scores: ",joint_attention_scores.shape)
+        
+        # Softmax across joints to get attention weights
+        attention_weights = F.softmax(joint_attention_scores, dim=-1)  # (batch_size, num_joints)
+        # print(" attention weights: ",attention_weights.shape)
+        
+        # Reshape weights for broadcasting over heatmaps
+        attention_weights = attention_weights.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)  # (batch_size, num_joints, 1, 1, 1)
+        # print(" attention weights: ",attention_weights.shape)
+        
+        # Apply attention weights to the original heatmaps
+        reweighted_heatmaps = original_heatmaps + original_heatmaps * attention_weights  # (batch_size, num_joints, temporal, H, W) 
+        # print(" reweighted weights: ",reweighted_heatmaps.shape)
+        
+        return reweighted_heatmaps

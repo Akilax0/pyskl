@@ -25,10 +25,10 @@ class PoseViewAttention(BaseRecognizer):
         losses = dict()
         
         # print("Heatmaps: ",imgs.shape)
-        # x = ViT(imgs)
-
-        x = self.extract_feat(imgs)
-
+        x = self.vit(imgs)
+        # print("vit output:",x.size())
+        
+        x = self.extract_feat(x)
 
         # Visualizing Features 
         # print("SIZES")

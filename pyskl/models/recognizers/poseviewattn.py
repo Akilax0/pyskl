@@ -52,9 +52,12 @@ class PoseViewAttention(BaseRecognizer):
 
     def forward_test(self, imgs, **kwargs):
         """Defines the computation performed at every call when evaluation, testing."""
+        
         batches = imgs.shape[0]
         num_segs = imgs.shape[1]
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
+       
+        imgs = self.vit(imgs)
 
         if self.max_testing_views is not None:
             total_views = imgs.shape[0]
@@ -65,6 +68,8 @@ class PoseViewAttention(BaseRecognizer):
             feats = []
             while view_ptr < total_views:
                 batch_imgs = imgs[view_ptr:view_ptr + self.max_testing_views]
+                
+                # vit
                 x = self.extract_feat(batch_imgs)
                 feats.append(x)
                 view_ptr += self.max_testing_views
@@ -78,6 +83,7 @@ class PoseViewAttention(BaseRecognizer):
             else:
                 feat = torch.cat(feats)
         else:
+            # vit
             feat = self.extract_feat(imgs)
 
         if self.test_cfg.get('feat_ext', False):

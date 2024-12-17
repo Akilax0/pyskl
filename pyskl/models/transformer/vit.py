@@ -56,13 +56,16 @@ class VisionTransformer(nn.Module):
         # in_channels = in_channels, **kwargs)
         super().__init__() 
         
-
-        self.heatmap_size = heatmap_size
+        
+        self.heatmap_size = heatmap_size 
         self.embedding_dim = embedding_dim
         self.num_joins = num_joints
         
-        self.flatten_size = heatmap_size[0]*heatmap_size[1]*heatmap_size[2]
-        self.embedding = nn.Linear(self.flatten_size, embedding_dim)
+        self.flatten_size = self.heatmap_size[0]*self.heatmap_size[1]*self.heatmap_size[2]
+        # print("fltaten, embedded :", self.flatten_size, embedding_dim)
+        # self.embedding = nn.Linear(self.flatten_size, embedding_dim)
+        # self.embedding = nn.LazyLinear(embedding_dim)
+        self.embedding = None 
 
         # positional encondings
         self.positional_encoding = PositionalEncoding(embedding_dim, num_joints)
@@ -80,11 +83,17 @@ class VisionTransformer(nn.Module):
         batch_size, num_joints, temporal_dim, height, width = x.shape
         
         original_heatmaps = x
+        
+        device = x.device
 
-        # print("x input: ",x.shape)
-        # Flatten each heatmap at 48*58*56 
+        # Flatten each heatmap at 48*56*56 
         x = x.view(batch_size, num_joints, -1)
         # print("x flatten: ",x.shape)
+        if self.embedding is None:
+            flatten_size = x.size(-1)
+            self.embedding = nn.Linear(flatten_size, self.embedding_dim).to(device) 
+            
+        # print("x device:",x.get_device())
         x = self.embedding(x)
         # print("x embedding: ",x.shape)
         x = self.positional_encoding(x)
@@ -106,10 +115,15 @@ class VisionTransformer(nn.Module):
         
         # Reshape weights for broadcasting over heatmaps
         attention_weights = attention_weights.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)  # (batch_size, num_joints, 1, 1, 1)
-        # print(" attention weights: ",attention_weights.shape)
         
         # Apply attention weights to the original heatmaps
-        reweighted_heatmaps = original_heatmaps + original_heatmaps * attention_weights  # (batch_size, num_joints, temporal, H, W) 
+        # reweighted_heatmaps = original_heatmaps + original_heatmaps * attention_weights  # (batch_size, num_joints, temporal, H, W) 
+
+        reweighted_heatmaps = original_heatmaps * attention_weights  # (batch_size, num_joints, temporal, H, W) 
         # print(" reweighted weights: ",reweighted_heatmaps.shape)
+        # print(" attention weights: ",attention_weights.shape)
+        # print("original heatmaps: ",original_heatmaps.shape)
+        # print(" attention weights: ",reweighted_heatmaps.shape)
+        # print(" attention weights: ",attention_weights)
         
         return reweighted_heatmaps

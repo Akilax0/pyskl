@@ -34,8 +34,9 @@ model = dict(
     cls_head=dict(
         type='I3DHead',
         in_channels=512,
+        # Changed for 120
         num_classes=60,
-        dropout=0),
+        dropout=0.5),
     test_cfg=dict(average_clips='prob'))
 
 dataset_type = 'PoseDataset'
@@ -64,7 +65,7 @@ val_pipeline = [
     dict(type='UniformSampleFrames', clip_len=48, num_clips=1),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
-    dict(type='Resize', scale=(56, 56), keep_ratio=False),
+    dict(type='Resize', scale=(64, 64), keep_ratio=False),
     dict(type='GeneratePoseTarget', with_kp=True, with_limb=False),
     dict(type='FormatShape', input_format='NCTHW_Heatmap'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
@@ -74,14 +75,14 @@ test_pipeline = [
     dict(type='UniformSampleFrames', clip_len=48, num_clips=10),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
-    dict(type='Resize', scale=(56, 56), keep_ratio=False),
+    dict(type='Resize', scale=(64, 64), keep_ratio=False),
     dict(type='GeneratePoseTarget', with_kp=True, with_limb=False, double=True, left_kp=left_kp, right_kp=right_kp),
     dict(type='FormatShape', input_format='NCTHW_Heatmap'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=32,
+    videos_per_gpu=1,
     workers_per_gpu=4,
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(
@@ -102,4 +103,4 @@ evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'],
 # log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook')])
 log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook'),dict(type='TensorboardLoggerHook')])
 log_level = 'INFO'
-work_dir = './work_dirs/posec3d/poseviewattn/only_attention_joint_60_dropout_0_0'
+work_dir = './work_dirs/posec3d/poseviewattn/debug'

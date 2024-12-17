@@ -16,7 +16,11 @@ from mmcv.fileio.io import file_handlers
 from mmcv.parallel import MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 
-from pyskl.datasets import build_dataloader, build_dataset
+import sys
+sys.path.append('.')
+
+from pyskl import __version__
+from pyskl.datasets import build_dataset, build_dataloader
 from pyskl.models import build_model
 from pyskl.utils import cache_checkpoint, mc_off, mc_on, test_port
 

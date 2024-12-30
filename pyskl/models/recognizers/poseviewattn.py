@@ -8,7 +8,7 @@ from .base import BaseRecognizer
 # importing transformer
 # from mmcls.models.backbones import VisionTransformer
 
-import matplotlib
+import matplotlib.pyplot as plt
 
 import torchvision.transforms as transforms
 from PIL import Image
@@ -26,13 +26,22 @@ class PoseViewAttention(BaseRecognizer):
         
         # print("Heatmaps: ",imgs.shape)
         x = self.vit(imgs)
-        # print("vit output:",x.size())
+        # print("vit output:",x.size(), x.type())
+
+        # cpu_tensor = x.detach().cpu().numpy()
+
+        # Visualize the tensor using Matplotlib
+        # plt.imshow(cpu_tensor, cmap='viridis', interpolation='nearest')
+        # plt.colorbar()
+        # plt.title("CUDA Float Tensor Visualization")
+        # plt.savefig("heatmaps.png")  # Save the figure
+        # plt.close()
         
         x = self.extract_feat(x)
 
         # Visualizing Features 
         # print("SIZES")
-        # print("Input Images: ",imgs.size())
+        # print("Input Images: ",imgs.size(), imgs.type())
         # print("Outputs size: ",x.size()) 
         
         # matplotlib.image.imsave("input_image.png",imgs[0].cpu())

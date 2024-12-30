@@ -35,7 +35,8 @@ model = dict(
         type='I3DHead',
         in_channels=512,
         num_classes=60,
-        dropout=0),
+        # Changing droupout here
+        dropout=0.05),
     test_cfg=dict(average_clips='prob'))
 
 dataset_type = 'PoseDataset'
@@ -102,4 +103,4 @@ evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'],
 # log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook')])
 log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook'),dict(type='TensorboardLoggerHook')])
 log_level = 'INFO'
-work_dir = './work_dirs/posec3d/poseviewattn/only_attention_joint_60_dropout_0_0'
+work_dir = './work_dirs/posec3d/poseviewattn/only_attention_joint_60_dropout_0_05'

@@ -119,7 +119,9 @@ class VisionTransformer(nn.Module):
         # Apply attention weights to the original heatmaps
         # reweighted_heatmaps = original_heatmaps + original_heatmaps * attention_weights  # (batch_size, num_joints, temporal, H, W) 
 
+        # Only weighted
         reweighted_heatmaps = original_heatmaps * attention_weights  # (batch_size, num_joints, temporal, H, W) 
+
         # print(" reweighted weights: ",reweighted_heatmaps.shape)
         # print(" attention weights: ",attention_weights.shape)
         # print("original heatmaps: ",original_heatmaps.shape)

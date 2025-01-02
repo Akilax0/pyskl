@@ -24,13 +24,22 @@ class PoseViewAttention(BaseRecognizer):
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
         losses = dict()
         
-        # print("Heatmaps: ",imgs.shape)
+        print("Heatmaps: ",imgs.shape)
+        cpu_tensor = imgs.detach().cpu().numpy()
+
+        # Visualize the Heatmaps using Matplotlib
+        plt.imshow(cpu_tensor, cmap='viridis', interpolation='nearest')
+        plt.colorbar()
+        plt.title("CUDA Float Tensor Visualization")
+        plt.savefig("heatmaps.png")  # Save the figure
+        plt.close()
+        
         x = self.vit(imgs)
         # print("vit output:",x.size(), x.type())
 
         # cpu_tensor = x.detach().cpu().numpy()
 
-        # Visualize the tensor using Matplotlib
+        # # Visualize the tensor using Matplotlib
         # plt.imshow(cpu_tensor, cmap='viridis', interpolation='nearest')
         # plt.colorbar()
         # plt.title("CUDA Float Tensor Visualization")

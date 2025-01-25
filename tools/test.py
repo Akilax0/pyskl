@@ -142,6 +142,9 @@ def main():
     rank, world_size = get_dist_info()
     cfg.gpu_ids = range(world_size)
 
+    # Printing system path
+    print(sys.path)
+
     # build the dataloader
     dataset = build_dataset(cfg.data.test, dict(test_mode=True))
     dataloader_setting = dict(

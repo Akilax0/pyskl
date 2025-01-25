@@ -23,6 +23,11 @@ two_person_annotations = []
 
 print(Load1.keys())
 print(len(annotations))
+# 113945
+# Check the latest download here
+
+print(len(split))
+# print(split)
 # 56578
 
 # Based on subject
@@ -40,19 +45,19 @@ for i in range(len(annotations)):
     # if int(annotations[i]['label']) == 1:
     #     print(annotations[i]['frame_dir'])
     if int(annotations[i]['label']) in class_list:
-        if annotations[i]['label']<=60:
-            annotations[i]['label'] = annotations[i]['label'] - 50
+        if annotations[i]['label']<60:
+            annotations[i]['label'] = annotations[i]['label'] - 49 # for 1 indexed classes
         else:
-            annotations[i]['label'] = annotations[i]['label'] - 95
+            annotations[i]['label'] = annotations[i]['label'] - 94 # starting from 12 
 
         two_person_annotations.append(annotations[i])
         # print(annotations[i].keys())
         
 print(len(two_person_annotations))
-# 9406
+# 23767
 
 
-print("Frane dir: ",two_person_annotations[0]['frame_dir'])
+print("Frame dir: ",two_person_annotations[0]['frame_dir'])
 print("label: ",two_person_annotations[0]['label'])
 print("image_shape: ",two_person_annotations[0]['img_shape'])
 print("original image shape: ",two_person_annotations[0]['original_shape'])
